@@ -17,8 +17,12 @@ class Game {
 }
 
 class Player {
-    String name;
+    int id;
     PlayingPiece piece;
+
+    Player(int id, PlayingPiece playingPiece) {
+        piece = playingPiece;
+    }
 }
 
 class Board {
