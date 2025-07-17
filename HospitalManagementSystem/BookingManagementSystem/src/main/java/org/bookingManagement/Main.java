@@ -1,6 +1,8 @@
 package org.bookingManagement;
 
 import org.bookingManagement.enums.Genre;
+import org.bookingManagement.exceptions.LiveShowAlreadyPresentException;
+import org.bookingManagement.exceptions.SlotException;
 import org.bookingManagement.exceptions.TicketNotPresentException;
 import org.bookingManagement.model.LiveShow;
 import org.bookingManagement.model.User;
@@ -11,9 +13,9 @@ import org.bookingManagement.service.BookingService;
 
 public class Main {
     public static void main(String[] args) {
-        BookingService manager = new BookingService();
-        LiveShowRepository liveShowRepository = new LiveShowRepository();
-        UserRepository userRepository = new UserRepository();;
+        BookingService manager = BookingService.getInstance();
+        LiveShowRepository liveShowRepository = LiveShowRepository.INSTANCE;
+        UserRepository userRepository = UserRepository.INSTANCE;
 
         // Register Show
         LiveShow liveShow = new LiveShow("TMKOC", Genre.COMEDY);
@@ -22,6 +24,7 @@ public class Main {
 
         // Invalid Slot
         System.out.println("i: onboardShowSlots: TMKUL y:UU-11:00");
+        if(isOneHour("9", "10")) System.out.println("Invalid input");;
         System.out.println("o: Sorry, show timings are of 1 hour only");
 
         // Valid Slot onboarding
@@ -33,6 +36,7 @@ public class Main {
         // Register 2nd show
         liveShow = new LiveShow("The Sonu Nigam Live Event", Genre.SINGING);
         liveShowRepository.registerLiveShow(liveShow);
+//        liveShowRepository.registerLiveShow(liveShow);
 
         // Onboard slots for Sonu show
         liveShowRepository.addSlotToShow("The Sonu Nigam Live Event", 10, 3);
@@ -57,12 +61,37 @@ public class Main {
         // Book Ticket
         User user = new User("UserB");
         userRepository.registerUser(user);
-        boolean booked = manager.bookTicket(user, 12,liveShowRepository.getLiveShow("TMKOC"),  12);
-        System.out.println(booked? "Done": "Not done");
+        Integer booked = manager.bookTicket(user, 2,liveShowRepository.getLiveShow("TMKOC"),  12);
+        System.out.println("Booked: " + booked);
+
+        // Show Avail By Genre: Comedy
+        liveShowRepository.getLiveShowsByStartTime(Genre.COMEDY).forEach(show ->
+                show.getSlotMap().values().forEach(slot ->
+                        System.out.println("o: " + show.getName() + ": (" + formatHour(slot.getStartHour()) + "-" + formatHour(slot.getStartHour() + 1) + ") " + slot.getCapacity())
+                )
+        );
+        try{
+            Integer booked2 = manager.bookTicket(user, 1,liveShowRepository.getLiveShow("TMKOC"),  12);
+        } catch (SlotException e){}
+
+        User user2 = new User("UserA");
+        User user3 = new User("UserB");
+        Integer booked2 = manager.bookTicket(user2, 3,liveShowRepository.getLiveShow("TMKOC"),  12);
+        manager.bookTicket(user3, 1, liveShowRepository.getLiveShow("TMKOC"),  12);
+        manager.cancelTicket(booked);
+
+        liveShowRepository.getLiveShowsByStartTime(Genre.COMEDY).forEach(show ->
+                show.getSlotMap().values().forEach(slot ->
+                        System.out.println("o: " + show.getName() + ": (" + formatHour(slot.getStartHour()) + "-" + formatHour(slot.getStartHour() + 1) + ") " + slot.getCapacity())
+                )
+        );
+
         // Register Arijit Show
         liveShow = new LiveShow("The Arijit Singh Live Event", Genre.SINGING);
-        liveShowRepository.registerLiveShow(liveShow);
-        liveShowRepository.registerLiveShow(liveShow);
+        try{
+            liveShowRepository.registerLiveShow(liveShow);
+            liveShowRepository.registerLiveShow(liveShow);
+        } catch (LiveShowAlreadyPresentException e){}
 
     }
     private static boolean isOneHour(String start, String end) {
@@ -72,7 +101,6 @@ public class Main {
     private static int parseHour(String time) {
         return Integer.parseInt(time.split(":")[0]);
     }
-
     private static String formatHour(int hour) {
         return String.format("%02d:00", hour);
     }

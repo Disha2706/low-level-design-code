@@ -1,11 +1,15 @@
 package org.bookingManagement.model;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
+@RequiredArgsConstructor
 public class User {
     private String name;
     private List<Ticket> bookedTickets;

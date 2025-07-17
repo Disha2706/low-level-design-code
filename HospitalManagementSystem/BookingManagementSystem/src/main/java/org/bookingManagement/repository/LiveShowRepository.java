@@ -5,27 +5,26 @@ import org.bookingManagement.exceptions.LiveShowAlreadyPresentException;
 import org.bookingManagement.exceptions.NoGenrePresentException;
 import org.bookingManagement.model.LiveShow;
 import org.bookingManagement.strategy.RankingStrategy;
-import org.bookingManagement.strategy.StartTimeRankingStrategy;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LiveShowRepository {
+import static org.bookingManagement.strategy.RankingStrategyFactory.getRankingStrategy;
+
+public enum LiveShowRepository {
+    INSTANCE;
     private static final Map<String, LiveShow> registeredLiveShows = new HashMap<>();
     private static final Map<Genre, List<LiveShow>> showsByGenre = new HashMap<>();
-    private RankingStrategy startTimeRankingStrategy = new StartTimeRankingStrategy();
+    private final RankingStrategy startTimeRankingStrategy = getRankingStrategy("startTime");
 
     public void registerLiveShow(LiveShow liveShow){
         if(registeredLiveShows.containsKey(liveShow.getName()))
             throw new LiveShowAlreadyPresentException("Live show already exists int the system!");
         registeredLiveShows.put(liveShow.getName(), liveShow);
 
-        if(!showsByGenre.containsKey(liveShow.getGenre())){
-            showsByGenre.put(liveShow.getGenre(), List.of(liveShow));
-        } else {
-            showsByGenre.get(liveShow.getGenre()).add(liveShow);
-        }
+        showsByGenre.computeIfAbsent(liveShow.getGenre(), k -> new ArrayList<>()).add(liveShow);
     }
 
     public Boolean isLiveShowRegistered(String showName){

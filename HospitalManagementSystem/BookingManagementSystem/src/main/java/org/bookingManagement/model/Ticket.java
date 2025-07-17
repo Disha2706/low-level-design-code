@@ -1,9 +1,12 @@
 package org.bookingManagement.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@RequiredArgsConstructor
 public class Ticket {
     private Integer id;
     private LiveShow liveShow;
